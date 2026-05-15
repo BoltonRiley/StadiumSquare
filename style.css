@@ -8,9 +8,18 @@ body {
 }
 
 header {
-    background-color: #007bff;
-    color: white;
-    padding: 24px 20px;
+    background: none;
+    padding: 0;
+}
+
+.header-banner {
+    overflow: hidden;
+}
+
+.header-banner__image {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
 .menu-grid {

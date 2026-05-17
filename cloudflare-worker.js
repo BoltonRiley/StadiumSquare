@@ -1,77 +1,58 @@
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
-});
+export default {
+  async fetch(request) {
+    const allowedOrigins = [
+      "https://stadiumsquare.densitygames.online",
+      "https://ominous-telegram-xx5w9p76vwqcwq6-8000.app.github.dev"
+    ];
 
-const CORS_HEADERS = {
-  'Content-Type': 'application/json;charset=UTF-8',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,HEAD,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+    const origin = request.headers.get("Origin");
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": allowedOrigins.includes(origin)
+        ? origin
+        : "null",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    };
+
+    // Handle preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    const urls = {
+      popcorn: "https://orderaway.com.au/austfootbleamarstadstadsq",
+      drinksStation: "https://orderaway.com.au/ejabrhqiogsjchjhyojp",
+      marathonDimSims: "https://orderaway.com.au/ktlnajtohbqavpdprbnf",
+      butchersBlock: "https://orderaway.com.au/yzmzhrrxvgcxszexodri",
+      earl: "https://orderaway.com.au/austfootbleamarstadearl",
+      johnnieWalker: "https://orderaway.com.au/austfootbleamarstadjohwal",
+      eightBit: "https://orderaway.com.au/austfootbleamarstad8bitst"
+    };
+
+    const target = `<div class="">Online ordering is currently disabled.</div>`;
+
+    async function check(url) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return false;
+
+        const html = await res.text();
+        return html.includes(target);
+      } catch (err) {
+        return false;
+      }
+    }
+
+    const results = {};
+    for (const key in urls) {
+      results[key] = await check(urls[key]);
+    }
+
+    return new Response(JSON.stringify(results, null, 2), {
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders
+      }
+    });
+  }
 };
-
-async function handleRequest(request) {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: CORS_HEADERS,
-    });
-  }
-
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: CORS_HEADERS,
-    });
-  }
-
-  let payload;
-  try {
-    payload = await request.json();
-  } catch (err) {
-    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-      status: 400,
-      headers: CORS_HEADERS,
-    });
-  }
-
-  const url = payload?.url;
-  if (!url) {
-    return new Response(JSON.stringify({ error: 'Missing url' }), {
-      status: 400,
-      headers: CORS_HEADERS,
-    });
-  }
-
-  try {
-    const target = new URL(url);
-    const response = await fetch(target.toString(), {
-      method: 'GET',
-      redirect: 'follow',
-    });
-
-    const open = response.ok;
-    return new Response(
-      JSON.stringify({
-        open,
-        status: open ? 'open' : 'closed',
-        statusCode: response.status,
-      }),
-      {
-        status: 200,
-        headers: CORS_HEADERS,
-      }
-    );
-  } catch (err) {
-    return new Response(
-      JSON.stringify({
-        open: false,
-        status: 'closed',
-        error: err.message,
-      }),
-      {
-        status: 502,
-        headers: CORS_HEADERS,
-      }
-    );
-  }
-}

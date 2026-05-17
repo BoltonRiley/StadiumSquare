@@ -14,28 +14,100 @@
     </header>
     <main>
         <div class="menu-grid">
-            <a href="https://orderaway.com.au/austfootbleamarstadearl" class="menu-link">
+            <a href="https://orderaway.com.au/austfootbleamarstadearl" class="menu-link" data-worker-key="earl">
                 <img src="Banner%20Images/Earl.png" alt="Earl Cafe" class="menu-link__image">
             </a>
-            <a href="https://orderaway.com.au/austfootbleamarstad8bitst" class="menu-link">
+            <a href="https://orderaway.com.au/austfootbleamarstad8bitst" class="menu-link" data-worker-key="eightBit">
                 <img src="Banner%20Images/8BIT.png" alt="8BIT" class="menu-link__image">
             </a>
-            <a href="https://orderaway.com.au/austfootbleamarstadjohwal" class="menu-link">
+            <a href="https://orderaway.com.au/austfootbleamarstadjohwal" class="menu-link" data-worker-key="johnnieWalker">
                 <img src="Banner%20Images/Johnnie%20Walker.png" alt="Johnny Walker" class="menu-link__image">
             </a>
-            <a href="https://orderaway.com.au/austfootbleamarstadstadsq" class="menu-link">
+            <a href="https://orderaway.com.au/austfootbleamarstadstadsq" class="menu-link" data-worker-key="popcorn">
                 <img src="Banner%20Images/Popcorn%20Cart.png" alt="Popcorn Cart" class="menu-link__image">
             </a>
-            <a href="https://orderaway.com.au/ejabrhqiogsjchjhyojp" class="menu-link">
+            <a href="https://orderaway.com.au/ejabrhqiogsjchjhyojp" class="menu-link" data-worker-key="drinksStation">
                 <img src="Banner%20Images/Drinks%20Station.png" alt="Drinks Station" class="menu-link__image">
             </a>
-            <a href="https://orderaway.com.au/ktlnajtohbqavpdprbnf" class="menu-link">
+            <a href="https://orderaway.com.au/ktlnajtohbqavpdprbnf" class="menu-link" data-worker-key="marathonDimSims">
                 <img src="Banner%20Images/Marathon%20Dim%20Sims.png" alt="Marathon Dim Sims" class="menu-link__image">
             </a>
-            <a href="https://orderaway.com.au/yzmzhrrxvgcxszexodri" class="menu-link">
+            <a href="https://orderaway.com.au/yzmzhrrxvgcxszexodri" class="menu-link" data-worker-key="butchersBlock">
                 <img src="Banner%20Images/Butchers%20Block.png" alt="Butchers Block" class="menu-link__image">
             </a>
         </div>
     </main>
+    <script>
+        // Cloudflare worker endpoint that checks whether each venue is closed.
+        // Set this to your deployed worker URL, e.g. 'https://muddy-tree-8da8.rileybolton6.workers.dev/'.
+        // Your worker should return JSON like:
+        // {
+        //   "popcorn": false,
+        //   "drinksStation": false,
+        //   "marathonDimSims": false,
+        //   "butchersBlock": false,
+        //   "earl": false,
+        //   "johnnieWalker": false,
+        //   "eightBit": false
+        // }
+        // In this worker response, `true` means the location is closed,
+        // and `false` means the location is open.
+        const workerEndpoint = 'https://muddy-tree-8da8.rileybolton6.workers.dev/';
+
+        const venueLinkSelector = '.menu-link';
+        const venueKeyAttribute = 'workerKey';
+
+        const statusLabels = {
+            closed: 'Outlet closed',
+        };
+
+        function createClosedOverlay(link) {
+            const overlay = document.createElement('div');
+            overlay.className = 'menu-link__status';
+            overlay.textContent = statusLabels.closed;
+            link.appendChild(overlay);
+            return overlay;
+        }
+
+        function markLinkClosed(link) {
+            link.classList.add('menu-link--closed');
+            link.setAttribute('aria-disabled', 'true');
+            link.setAttribute('tabindex', '-1');
+            createClosedOverlay(link);
+        }
+
+        async function fetchWorkerStatus() {
+            if (!workerEndpoint) {
+                throw new Error('Cloudflare worker endpoint is not set.');
+            }
+
+            const response = await fetch(workerEndpoint);
+            if (!response.ok) {
+                throw new Error(`Worker responded ${response.status}`);
+            }
+
+            return await response.json();
+        }
+
+        async function checkAllVenueLinks() {
+            const links = document.querySelectorAll(venueLinkSelector);
+
+            try {
+                const result = await fetchWorkerStatus();
+                links.forEach(link => {
+                    const key = link.dataset[venueKeyAttribute];
+                    const isClosed = result?.[key];
+
+                    if (isClosed === true) {
+                        markLinkClosed(link);
+                    }
+                });
+            } catch (error) {
+                console.warn('Venue status check failed:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkAllVenueLinks);
+    </script>
 </body>
 </html>

@@ -107,7 +107,37 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', checkAllVenueLinks);
+        function updateVenueLinks(locationValue) {
+            document.querySelectorAll(venueLinkSelector).forEach(link => {
+                const baseHref = link.dataset.originalHref || link.href;
+                const url = new URL(baseHref);
+
+                if (locationValue) {
+                    url.searchParams.set('location', locationValue);
+                } else {
+                    url.searchParams.delete('location');
+                }
+
+                link.href = url.toString();
+            });
+        }
+
+        function syncLocationFromPageUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const locationValue = params.get('location') || '';
+            updateVenueLinks(locationValue);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll(venueLinkSelector).forEach(link => {
+                if (!link.dataset.originalHref) {
+                    link.dataset.originalHref = link.href;
+                }
+            });
+
+            syncLocationFromPageUrl();
+            checkAllVenueLinks();
+        });
     </script>
 </body>
 </html>

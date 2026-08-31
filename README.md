@@ -1,1 +1,2 @@
 # StadiumSquare
+Stadium Square is a landing page that I developed for Marvel Stadium to redirect users from a single landing page into different restaurants in the Stadium. In a later iteration of this, hosted on our AWS infrastructure, I allowed it to pull images from the POS provider's page and the status of the outlet being open or closed so that it is entirely updated from the POS provider's page and does not need editing.
